@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Atiende · Backend de Atención al Cliente
 
 ## Qué es el proyecto
@@ -147,3 +148,7 @@ El proyecto incluye tests unitarios con JUnit 5 y Mockito sin levantar el contex
 # En Linux / macOS
 ./mvnw test
 ```
+=======
+# atiende
+un proyecto educativo de una tienda de café automatizada con IA
+>>>>>>> 9cbad5bb9bf53edcc59cd2c1111ed447cd9ebfa9
