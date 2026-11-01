@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.devsenior.atiende.ticket.dto.CambiarEstadoSolicitud;
 import com.devsenior.atiende.ticket.dto.CrearTicketSolicitud;
+import com.devsenior.atiende.ticket.dto.SentimientoRespuesta;
 import com.devsenior.atiende.ticket.dto.TicketRespuesta;
 
 import jakarta.validation.Valid;
@@ -50,5 +51,10 @@ public class TicketControlador {
             @PathVariable Long id,
             @Valid @RequestBody CambiarEstadoSolicitud solicitud) {
         return ResponseEntity.ok(ticketServicio.cambiarEstado(id, solicitud));
+    }
+
+    @PostMapping("/{id}/sentimiento")
+    public ResponseEntity<SentimientoRespuesta> analizarSentimiento(@PathVariable Long id) {
+        return ResponseEntity.ok(ticketServicio.analizarSentimiento(id));
     }
 }

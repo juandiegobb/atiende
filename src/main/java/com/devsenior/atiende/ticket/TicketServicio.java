@@ -3,12 +3,18 @@ package com.devsenior.atiende.ticket;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devsenior.atiende.compartido.RecursoNoEncontradoException;
+import com.devsenior.atiende.ia.AsistenteIA;
+import com.devsenior.atiende.ia.LectorPrompts;
+import com.devsenior.atiende.ia.RespuestaIA;
+import com.devsenior.atiende.ia.RespuestaIaInvalidaException;
 import com.devsenior.atiende.ticket.dto.CambiarEstadoSolicitud;
 import com.devsenior.atiende.ticket.dto.CrearTicketSolicitud;
+import com.devsenior.atiende.ticket.dto.SentimientoRespuesta;
 import com.devsenior.atiende.ticket.dto.TicketRespuesta;
 
 @Service
@@ -16,10 +22,23 @@ public class TicketServicio {
 
     private final TicketRepositorio ticketRepositorio;
     private final TicketMapper ticketMapper;
+    private final AsistenteIA asistenteIA;
+    private final LectorPrompts lectorPrompts;
 
-    public TicketServicio(TicketRepositorio ticketRepositorio, TicketMapper ticketMapper) {
+    @Autowired
+    public TicketServicio(
+            TicketRepositorio ticketRepositorio,
+            TicketMapper ticketMapper,
+            AsistenteIA asistenteIA,
+            LectorPrompts lectorPrompts) {
         this.ticketRepositorio = ticketRepositorio;
         this.ticketMapper = ticketMapper;
+        this.asistenteIA = asistenteIA;
+        this.lectorPrompts = lectorPrompts;
+    }
+
+    public TicketServicio(TicketRepositorio ticketRepositorio, TicketMapper ticketMapper) {
+        this(ticketRepositorio, ticketMapper, null, null);
     }
 
     @Transactional
@@ -47,6 +66,27 @@ public class TicketServicio {
     public TicketRespuesta obtenerPorId(Long id) {
         Ticket ticket = buscarOFallar(id);
         return ticketMapper.aRespuesta(ticket);
+    }
+
+    @Transactional(readOnly = true)
+    public SentimientoRespuesta analizarSentimiento(Long id) {
+        Ticket ticket = buscarOFallar(id);
+        String instrucciones = lectorPrompts.leer("sentimiento");
+        RespuestaIA respuesta = asistenteIA.completar(instrucciones, ticket.getMensaje());
+
+        SentimientoTicket sentimiento = SentimientoTicket.desdeTexto(respuesta.texto());
+        if (sentimiento == null) {
+            throw new RespuestaIaInvalidaException("La IA devolvió un sentimiento no reconocido: " + respuesta.texto());
+        }
+
+        return new SentimientoRespuesta(
+                sentimiento,
+                respuesta.proveedor(),
+                respuesta.modelo(),
+                respuesta.tokensEntrada(),
+                respuesta.tokensSalida(),
+                respuesta.costoEstimado(),
+                respuesta.milisegundos());
     }
 
     @Transactional

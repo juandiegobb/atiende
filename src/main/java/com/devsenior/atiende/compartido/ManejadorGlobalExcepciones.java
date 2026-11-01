@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.devsenior.atiende.ia.IaNoDisponibleException;
+import com.devsenior.atiende.ia.RespuestaIaInvalidaException;
 import com.devsenior.atiende.ticket.TransicionEstadoNoPermitidaException;
 
 @RestControllerAdvice
@@ -59,5 +61,25 @@ public class ManejadorGlobalExcepciones {
                 ex.getMessage(),
                 LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(cuerpo);
+    }
+
+    @ExceptionHandler(RespuestaIaInvalidaException.class)
+    public ResponseEntity<ErrorRespuesta> manejarRespuestaIaInvalida(RespuestaIaInvalidaException ex) {
+        ErrorRespuesta cuerpo = new ErrorRespuesta(
+                HttpStatus.BAD_GATEWAY.value(),
+                "RESPUESTA_IA_INVALIDA",
+                ex.getMessage(),
+                LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(cuerpo);
+    }
+
+    @ExceptionHandler(IaNoDisponibleException.class)
+    public ResponseEntity<ErrorRespuesta> manejarIaNoDisponible(IaNoDisponibleException ex) {
+        ErrorRespuesta cuerpo = new ErrorRespuesta(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "IA_NO_DISPONIBLE",
+                ex.getMessage(),
+                LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(cuerpo);
     }
 }
