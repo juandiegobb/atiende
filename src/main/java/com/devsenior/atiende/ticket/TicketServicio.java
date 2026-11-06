@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.devsenior.atiende.compartido.RecursoNoEncontradoException;
 import com.devsenior.atiende.ia.AsistenteIA;
-import com.devsenior.atiende.ia.LectorPrompts;
+import com.devsenior.atiende.ia.BibliotecaPrompts;
 import com.devsenior.atiende.ia.RespuestaIA;
 import com.devsenior.atiende.ia.RespuestaIaInvalidaException;
 import com.devsenior.atiende.ticket.dto.CambiarEstadoSolicitud;
@@ -23,18 +23,18 @@ public class TicketServicio {
     private final TicketRepositorio ticketRepositorio;
     private final TicketMapper ticketMapper;
     private final AsistenteIA asistenteIA;
-    private final LectorPrompts lectorPrompts;
+    private final BibliotecaPrompts bibliotecaPrompts;
 
     @Autowired
     public TicketServicio(
             TicketRepositorio ticketRepositorio,
             TicketMapper ticketMapper,
             AsistenteIA asistenteIA,
-            LectorPrompts lectorPrompts) {
+            BibliotecaPrompts bibliotecaPrompts) {
         this.ticketRepositorio = ticketRepositorio;
         this.ticketMapper = ticketMapper;
         this.asistenteIA = asistenteIA;
-        this.lectorPrompts = lectorPrompts;
+        this.bibliotecaPrompts = bibliotecaPrompts;
     }
 
     public TicketServicio(TicketRepositorio ticketRepositorio, TicketMapper ticketMapper) {
@@ -71,7 +71,7 @@ public class TicketServicio {
     @Transactional(readOnly = true)
     public SentimientoRespuesta analizarSentimiento(Long id) {
         Ticket ticket = buscarOFallar(id);
-        String instrucciones = lectorPrompts.leer("sentimiento");
+        String instrucciones = bibliotecaPrompts.cargar("sentimiento");
         RespuestaIA respuesta = asistenteIA.completar(instrucciones, ticket.getMensaje());
 
         SentimientoTicket sentimiento = SentimientoTicket.desdeTexto(respuesta.texto());
@@ -102,8 +102,22 @@ public class TicketServicio {
         return ticketMapper.aRespuesta(actualizado);
     }
 
-    private Ticket buscarOFallar(Long id) {
+    @Transactional
+    public TicketRespuesta aplicarClasificacion(Long id, ClasificacionIA clasificacion, String numeroPedido) {
+        Ticket ticket = buscarOFallar(id);
+        ticket.setCategoria(clasificacion.categoria());
+        ticket.setPrioridad(clasificacion.prioridad());
+        ticket.setSentimiento(clasificacion.sentimiento());
+        ticket.setResumen(clasificacion.resumen());
+        ticket.setNumeroPedido(numeroPedido);
+        ticket.setFechaActualizacion(LocalDateTime.now());
+        Ticket guardado = ticketRepositorio.saveAndFlush(ticket);
+        return ticketMapper.aRespuesta(guardado);
+    }
+
+    public Ticket buscarOFallar(Long id) {
         return ticketRepositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el ticket con id " + id));
     }
 }
+

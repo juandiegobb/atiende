@@ -42,7 +42,21 @@ public class Ticket {
     @Column(nullable = false, length = 20)
     private PrioridadTicket prioridad;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Categoria categoria;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private SentimientoTicket sentimiento;
+
+    @Column(length = 300)
+    private String resumen;
+
+    @Column(length = 50)
+    private String numeroPedido;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
     @Column(nullable = false)
@@ -114,6 +128,38 @@ public class Ticket {
 
     public void setPrioridad(PrioridadTicket prioridad) {
         this.prioridad = prioridad;
+    }
+
+    public Categoria getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
+
+    public SentimientoTicket getSentimiento() {
+        return sentimiento;
+    }
+
+    public void setSentimiento(SentimientoTicket sentimiento) {
+        this.sentimiento = sentimiento;
+    }
+
+    public String getResumen() {
+        return resumen;
+    }
+
+    public void setResumen(String resumen) {
+        this.resumen = resumen;
+    }
+
+    public String getNumeroPedido() {
+        return numeroPedido;
+    }
+
+    public void setNumeroPedido(String numeroPedido) {
+        this.numeroPedido = numeroPedido;
     }
 
     public LocalDateTime getFechaCreacion() {

@@ -17,8 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.devsenior.atiende.compartido.RecursoNoEncontradoException;
 import com.devsenior.atiende.ia.AsistenteIA;
+import com.devsenior.atiende.ia.BibliotecaPrompts;
 import com.devsenior.atiende.ia.IaNoDisponibleException;
-import com.devsenior.atiende.ia.LectorPrompts;
 import com.devsenior.atiende.ia.RespuestaIA;
 import com.devsenior.atiende.ia.RespuestaIaInvalidaException;
 import com.devsenior.atiende.ticket.dto.SentimientoRespuesta;
@@ -36,13 +36,13 @@ class TicketServicioSentimientoTest {
     private AsistenteIA asistenteIA;
 
     @Mock
-    private LectorPrompts lectorPrompts;
+    private BibliotecaPrompts bibliotecaPrompts;
 
     private TicketServicio ticketServicio;
 
     @BeforeEach
     void setUp() {
-        ticketServicio = new TicketServicio(ticketRepositorio, ticketMapper, asistenteIA, lectorPrompts);
+        ticketServicio = new TicketServicio(ticketRepositorio, ticketMapper, asistenteIA, bibliotecaPrompts);
     }
 
     @Test
@@ -53,7 +53,7 @@ class TicketServicioSentimientoTest {
         ticket.setMensaje("Mi café llegó completamente roto y frío, pésimo servicio.");
 
         when(ticketRepositorio.findById(ticketId)).thenReturn(Optional.of(ticket));
-        when(lectorPrompts.leer("sentimiento")).thenReturn("Instrucciones de sentimiento");
+        when(bibliotecaPrompts.cargar("sentimiento")).thenReturn("Instrucciones de sentimiento");
 
         RespuestaIA respuestaIA = new RespuestaIA(
                 "MOLESTO",
@@ -95,7 +95,7 @@ class TicketServicioSentimientoTest {
         ticket.setMensaje("Hola, quisiera saber el horario de atención.");
 
         when(ticketRepositorio.findById(ticketId)).thenReturn(Optional.of(ticket));
-        when(lectorPrompts.leer("sentimiento")).thenReturn("Instrucciones");
+        when(bibliotecaPrompts.cargar("sentimiento")).thenReturn("Instrucciones");
 
         RespuestaIA respuestaIA = new RespuestaIA(
                 "INDEFINIDO",
@@ -118,7 +118,7 @@ class TicketServicioSentimientoTest {
         ticket.setMensaje("No puedo iniciar sesión");
 
         when(ticketRepositorio.findById(ticketId)).thenReturn(Optional.of(ticket));
-        when(lectorPrompts.leer("sentimiento")).thenReturn("Instrucciones");
+        when(bibliotecaPrompts.cargar("sentimiento")).thenReturn("Instrucciones");
         when(asistenteIA.completar("Instrucciones", ticket.getMensaje()))
                 .thenThrow(new IaNoDisponibleException("Todos los proveedores fallaron"));
 

@@ -163,3 +163,64 @@ Viven en el sistema de la tienda (simulado en `PedidoService`): 1045, 1046 y 105
 - [ ] Si el cliente pide hablar con una persona, la respuesta trae escalado true y el id de un ticket nuevo.
 - [ ] Si la IA promete un cupón, el cliente recibe el mensaje seguro y se crea un ticket.
 - [ ] Los 38 tests anteriores siguen en verde.
+
+
+# SPEC · Atiende · Fase 3: la IA trabaja con el equipo y con el cliente
+
+## Problema
+Llegan 300 mensajes al día y el equipo tarda unos 4 minutos por ticket en leer, clasificar, buscar el pedido y redactar la respuesta: 20 horas de trabajo para 16 horas disponibles.
+
+## Objetivo de la fase 3
+1. Clasificar un ticket con IA (categoría, prioridad, sentimiento, resumen y número de pedido) y guardar el resultado.
+2. Redactar un borrador de respuesta con datos verificados del pedido. Lo aprueba una persona.
+3. Un chatbot para el chat web que responde preguntas frecuentes y escala a una persona cuando hace falta.
+
+## Fuera de alcance (llega después)
+- Clasificar automáticamente al crear el ticket.
+- Enviar correos o mensajes de WhatsApp de verdad.
+- Guardar las conversaciones del chatbot.
+- Autenticación (deuda técnica declarada desde la Fase 2).
+
+## Prompts
+Viven en `src/main/resources/prompts/` como archivos `.txt`, con variables `{{nombre}}`.
+
+| Archivo | Variables | Uso |
+|---|---|---|
+| sentimiento.txt | ninguna | Análisis de sentimiento (Fase 2) |
+| clasificacion.txt | ninguna | Clasificación del ticket |
+| borrador-respuesta.txt | cliente, formato, datos | Borrador de respuesta |
+| chatbot.txt | cliente, datos | Chatbot del chat web |
+
+## Categorías
+ENVIO, PRODUCTO, PAGO, CONSULTA, OTRO.
+
+## Reglas
+1. Los prompts no se escriben dentro de clases Java.
+2. El texto del cliente nunca se mezcla con las instrucciones: va siempre como mensaje aparte.
+3. Toda respuesta en JSON se valida. Si no es JSON válido, le faltan campos o trae valores no permitidos: 502.
+4. El número de pedido que proponga la IA solo se guarda si aparece en el mensaje del cliente.
+5. Los datos del pedido (estado, transportadora, guía, fechas y días de retraso) los calcula y redacta Java. La IA solo los comunica.
+6. El borrador nunca se envía solo: lo revisa una persona. Si el canal es CORREO lleva asunto; si no, no.
+7. El chatbot nunca promete cupones, descuentos ni reembolsos. Si su respuesta lo hace, el cliente recibe un mensaje seguro y se escala.
+8. Al escalar, el chatbot crea un ticket con canal CHAT_WEB y los mensajes del cliente.
+9. El chatbot no guarda memoria: el historial llega completo en cada petición (máximo 20 turnos de 500 caracteres).
+
+## Pedidos
+Viven en el sistema de la tienda (simulado en `PedidoService`): 1045, 1046 y 1050.
+
+## Endpoints
+| Método | Ruta | Respuestas |
+|---|---|---|
+| POST | /api/tickets/{id}/clasificacion | 200 · 404 · 502 · 503 |
+| POST | /api/tickets/{id}/borrador | 200 · 404 · 502 · 503 |
+| POST | /api/chat | 200 · 400 · 502 · 503 |
+
+## Criterios de aceptación
+- [ ] Clasificar el ticket de Laura guarda categoría ENVIO, sentimiento MOLESTO, número de pedido 1045 y una prioridad más alta que MEDIA.
+- [ ] Si la IA propone un número de pedido que no está en el mensaje, se guarda vacío.
+- [ ] El borrador del ticket de Laura menciona TransAndina, la guía TA-778201 y los 3 días de retraso, y no trae asunto.
+- [ ] El borrador de un ticket que llegó por CORREO trae asunto.
+- [ ] El chatbot responde preguntas de envíos y moliendas sin crear tickets.
+- [ ] Si el cliente pide hablar con una persona, la respuesta trae escalado true y el id de un ticket nuevo.
+- [ ] Si la IA promete un cupón, el cliente recibe el mensaje seguro y se crea un ticket.
+- [ ] Los 38 tests anteriores siguen en verde.
